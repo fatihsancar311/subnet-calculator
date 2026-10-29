@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Subnet Hesaplama | IPv4 CIDR Subnet Calculator</title>
+<meta name="description" content="Dependency-free IPv4 subnet and CIDR calculator: network, broadcast, mask, wildcard, host range and subnet splitting.">
+<style>
+:root{--td-navy:#101840;--td-cta:#08B0B0;--td-muted:#5B6385;--td-line:#E4E7F1;--td-bg-soft:#F5F6FB}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#2b3358;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.6}
+.page{max-width:1000px;margin:0 auto;padding:32px 20px 48px}
+h1{margin:0 0 6px;color:var(--td-navy);font-size:clamp(1.7rem,4vw,2.4rem);line-height:1.15}
+.lead{margin:0 0 22px;color:var(--td-muted);font-size:1.05rem}
+.foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--td-line);font-size:.9rem;color:var(--td-muted)}
+.foot a{color:#067E7E}
+</style>
+<style>
+.td-sn{--sn-bg:var(--td-bg-soft,#F5F6FB);--sn-bd:var(--td-line,#E4E7F1);--sn-ac:var(--td-cta,#08B0B0);--sn-nv:var(--td-navy,#101840);--sn-mu:var(--td-muted,#5B6385)}
+.td-sn-card{background:#fff;border:1px solid var(--sn-bd);border-radius:20px;box-shadow:0 10px 30px -12px rgba(16,24,64,.18);padding:22px;color:var(--sn-nv)}
+.td-sn-form{display:flex;flex-wrap:wrap;gap:10px}
+.td-sn-form input,.td-sn-form select,.td-sn-sub select{border:1px solid var(--sn-bd);border-radius:12px;padding:12px 14px;font-size:1rem;background:#fff;color:var(--sn-nv)}
+.td-sn-form input{flex:1 1 260px}
+.td-sn-btn{background:var(--sn-ac);color:#101840;border:0;border-radius:12px;padding:12px 26px;font-weight:800;font-size:1rem;cursor:pointer}
+.td-sn-btn.alt{background:#fff;color:var(--sn-nv);border:1px solid var(--sn-bd);font-weight:700;padding:8px 14px;font-size:.88rem}
+.td-sn-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center;font-size:.88rem;color:var(--sn-mu)}
+.td-sn-msg{min-height:1.3em;margin:10px 0 0;font-size:.92rem;color:#c0392b}
+.td-sn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:16px}
+.td-sn-item{background:var(--sn-bg);border:1px solid var(--sn-bd);border-radius:12px;padding:12px 14px}
+.td-sn-item span{display:block;font-size:.8rem;color:var(--sn-mu);margin-bottom:2px}
+.td-sn-item strong{font-size:1.05rem;word-break:break-word;font-family:var(--td-font-head,sans-serif)}
+.td-sn-item.hl{background:var(--sn-nv);border-color:var(--sn-nv)}
+.td-sn-item.hl span{color:rgba(255,255,255,.7)}.td-sn-item.hl strong{color:#fff}
+.td-sn-bin{margin-top:16px;border:1px solid var(--sn-bd);border-radius:12px;padding:14px;background:#fff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;overflow-x:auto}
+.td-sn-bin div{white-space:nowrap;line-height:1.9}
+.td-sn-bin b{display:inline-block;width:8.5em;font-family:var(--td-font-body,sans-serif);color:var(--sn-mu);font-weight:600;font-size:.82rem}
+.td-sn-bin .n{color:#067E7E;font-weight:700}.td-sn-bin .h{color:#8a92ab}
+.td-sn-sub{margin-top:22px}
+.td-sn-sub h3{margin:0 0 10px !important;font-size:1.15rem !important}
+.td-sn-sub .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.td-sn-wrap{overflow-x:auto}
+.td-sn-wrap table{font-size:.9rem}
+.td-sn-note{font-size:.85rem;color:var(--sn-mu);margin:8px 0 0}
+</style>
+</head>
+<body>
+<main class="page">
+<h1>Subnet Hesaplama</h1>
+<p class="lead">IP adresi ve CIDR değerinden ağ adresi, maske, host aralığı ve alt ağları hesaplayın.</p>
+<div class="td-sn" id="td-sn">
+ <div class="td-sn-card">
+  <form class="td-sn-form" id="sn-form" novalidate>
+   <input type="text" id="sn-ip" value="192.168.1.10/24" placeholder="192.168.1.10/24 ya da 192.168.1.10 255.255.255.0" autocomplete="off" aria-label="IP adresi ve alt ağ maskesi">
+   <select id="sn-p" aria-label="Önek uzunluğu (CIDR)"></select>
+   <button class="td-sn-btn" type="submit">Hesapla</button>
+  </form>
+  <div class="td-sn-chips">Örnekler:
+   <button class="td-sn-btn alt" type="button" data-v="10.0.0.0/8">10.0.0.0/8</button>
+   <button class="td-sn-btn alt" type="button" data-v="172.16.0.0/12">172.16.0.0/12</button>
+   <button class="td-sn-btn alt" type="button" data-v="192.168.1.0/24">192.168.1.0/24</button>
+   <button class="td-sn-btn alt" type="button" data-v="203.0.113.70/26">203.0.113.70/26</button>
+  </div>
+  <p class="td-sn-msg" id="sn-msg" role="status"></p>
+  <div class="td-sn-grid" id="sn-grid"></div>
+  <div class="td-sn-bin" id="sn-bin"></div>
+  <p style="margin:12px 0 0"><button class="td-sn-btn alt" type="button" id="sn-copy">Sonuçları kopyala</button></p>
+  <div class="td-sn-sub">
+   <h3>Alt ağlara böl</h3>
+   <div class="row"><label for="sn-sub">Yeni önek uzunluğu:</label><select id="sn-sub"></select><span id="sn-subinfo" class="td-sn-note"></span></div>
+   <div class="td-sn-wrap"><table><thead><tr><th>#</th><th>Ağ adresi</th><th>Kullanılabilir host aralığı</th><th>Yayın (broadcast)</th></tr></thead><tbody id="sn-subbody"></tbody></table></div>
+  </div>
+  <p class="td-sn-note">Hesaplama tamamen tarayıcınızda yapılır; yazdığınız adresler hiçbir yere gönderilmez. Bu araç IPv4 içindir; IPv6 önekleri için aşağıdaki tabloya bakın.</p>
+ </div>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i);};
+  var ipEl=$('sn-ip'),pEl=$('sn-p'),subEl=$('sn-sub'),msg=$('sn-msg'),grid=$('sn-grid'),bin=$('sn-bin');
+  for(var i=0;i<=32;i++){var o=document.createElement('option');o.value=i;o.textContent='/'+i;pEl.appendChild(o);}
+  pEl.value=24;
+  var last='';
+  function p2i(s){
+    if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(s))return null;
+    var a=s.split('.').map(Number);
+    for(var i=0;i<4;i++){if(a[i]>255)return null;}
+    return ((a[0]*16777216)+(a[1]*65536)+(a[2]*256)+a[3]);
+  }
+  function i2p(n){return [Math.floor(n/16777216)%256,Math.floor(n/65536)%256,Math.floor(n/256)%256,n%256].join('.');}
+  function mk(p){return p===0?0:((0xFFFFFFFF<<(32-p))>>>0);}
+  function m2p(m){
+    var inv=(~m)>>>0;if((inv&(inv+1))!==0)return null;
+    var p=0;for(var b=31;b>=0;b--){if((m>>>b)&1)p++;else break;}return p;
+  }
+  function bits(n){var s=n.toString(2);while(s.length<32)s='0'+s;return s;}
+  function bin4(n,p){
+    var s=bits(n),out='';
+    for(var i=0;i<32;i++){
+      if(i>0&&i%8===0)out+='.';
+      out+='<span class="'+(i<p?'n':'h')+'">'+s[i]+'</span>';
+    }return out;
+  }
+  function cls(n){
+    var a=Math.floor(n/16777216);
+    if(a===0)return 'Ayrılmış (0.0.0.0/8)';
+    if(a<128)return a===127?'A (loopback)':'A';
+    if(a<192)return 'B';if(a<224)return 'C';if(a<240)return 'D (multicast)';return 'E (ayrılmış)';
+  }
+  function typ(n){
+    function inr(b,p){return (n&mk(p))>>>0===b;}
+    var r=[[ '10.0.0.0',8,'Özel (RFC 1918)'],['172.16.0.0',12,'Özel (RFC 1918)'],['192.168.0.0',16,'Özel (RFC 1918)'],
+      ['127.0.0.0',8,'Loopback (kendi cihazı)'],['169.254.0.0',16,'Link-local (APIPA)'],['100.64.0.0',10,'CGNAT (paylaşımlı adres)'],
+      ['192.0.2.0',24,'Dokümantasyon (TEST-NET-1)'],['198.51.100.0',24,'Dokümantasyon (TEST-NET-2)'],['203.0.113.0',24,'Dokümantasyon (TEST-NET-3)'],
+      ['224.0.0.0',4,'Multicast'],['240.0.0.0',4,'Ayrılmış'],['0.0.0.0',8,'Bu ağ (0.0.0.0/8)']];
+    for(var i=0;i<r.length;i++){if(inr(p2i(r[i][0]),r[i][1]))return r[i][2];}
+    return 'Genel (internette yönlendirilebilir)';
+  }
+  function fmtN(x){return x.toLocaleString('tr-TR');}
+  function item(k,v,hl){return '<div class="td-sn-item'+(hl?' hl':'')+'"><span>'+k+'</span><strong>'+v+'</strong></div>';}
+  var cur=null;
+  function parse(){
+    var raw=ipEl.value.trim().replace(/\s+/g,' '),ip,p=parseInt(pEl.value,10),parts;
+    if(raw.indexOf('/')>-1){
+      parts=raw.split('/');ip=parts[0].trim();var q=(parts[1]||'').trim();
+      if(/^\d{1,2}$/.test(q)&&+q<=32){p=+q;}else{return {e:'Önek 0 ile 32 arasında olmalı (örn. /24).'};}
+    }else if(raw.indexOf(' ')>-1){
+      parts=raw.split(' ');ip=parts[0];var m=p2i(parts[1]);
+      if(m===null)return {e:'Alt ağ maskesi geçerli değil (örn. 255.255.255.0).'};
+      var pp=m2p(m);if(pp===null)return {e:'Bu maske geçerli bir alt ağ maskesi değil (bitler art arda olmalı).'};p=pp;
+    }else{ip=raw;}
+    var n=p2i(ip);
+    if(n===null)return {e:'Geçerli bir IPv4 adresi girin (örn. 192.168.1.10).'};
+    return {n:n,p:p};
+  }
+  function calc(){
+    var r=parse();
+    if(r.e){msg.textContent=r.e;return;}
+    msg.textContent='';
+    var n=r.n,p=r.p,m=mk(p),net=(n&m)>>>0,wild=(~m)>>>0,bc=(net|wild)>>>0,total=Math.pow(2,32-p);
+    var usable=p===32?1:(p===31?2:total-2),first=p>=31?net:net+1,lastH=p>=31?bc:bc-1;
+    pEl.value=p;cur={n:n,p:p,net:net,bc:bc};
+    var hex=[Math.floor(n/16777216)%256,Math.floor(n/65536)%256,Math.floor(n/256)%256,n%256].map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('').toUpperCase();
+    grid.innerHTML=
+      item('Ağ adresi',i2p(net)+'/'+p,true)+item('Yayın (broadcast) adresi',p===32?'Yok (tek adres)':i2p(bc))+
+      item('İlk kullanılabilir host',i2p(first))+item('Son kullanılabilir host',i2p(lastH))+
+      item('Alt ağ maskesi',i2p(m))+item('Wildcard maskesi',i2p(wild))+
+      item('Toplam adres',fmtN(total))+item('Kullanılabilir host',fmtN(usable),true)+
+      item('IP sınıfı',cls(n))+item('IP türü',typ(n))+item('CIDR gösterimi','/'+p)+item('Onaltılık (hex)','0x'+hex);
+    bin.innerHTML='<div><b>IP adresi</b>'+bin4(n,p)+'</div><div><b>Alt ağ maskesi</b>'+bin4(m,p)+'</div><div><b>Ağ adresi</b>'+bin4(net,p)+'</div><div><b>Yayın</b>'+bin4(bc,p)+'</div>'+
+      '<div style="font-family:var(--td-font-body,sans-serif);font-size:.8rem;color:#5B6385"><span class="n" style="font-weight:700">Turkuaz</span>: ağ bitleri ('+p+') · <span class="h">gri</span>: host bitleri ('+(32-p)+')</div>';
+    last='IP: '+i2p(n)+'/'+p+'\nAğ: '+i2p(net)+'\nYayın: '+(p===32?'-':i2p(bc))+'\nHost aralığı: '+i2p(first)+' - '+i2p(lastH)+'\nMaske: '+i2p(m)+'\nWildcard: '+i2p(wild)+'\nKullanılabilir host: '+usable;
+    fillSub();
+  }
+  function fillSub(){
+    var p=cur.p,keep=parseInt(subEl.value,10);subEl.innerHTML='';
+    var maxp=Math.min(32,p+10);
+    for(var i=p;i<=maxp;i++){var o=document.createElement('option');o.value=i;o.textContent='/'+i;subEl.appendChild(o);}
+    var def=(keep>=p&&keep<=maxp)?keep:Math.min(p+2,maxp);subEl.value=def;renderSub();
+  }
+  function renderSub(){
+    var np=parseInt(subEl.value,10),p=cur.p,cnt=Math.pow(2,np-p),size=Math.pow(2,32-np),show=Math.min(cnt,64),h='';
+    for(var i=0;i<show;i++){
+      var a=cur.net+i*size,b=a+size-1,f=np>=31?a:a+1,l=np>=31?b:b-1;
+      h+='<tr><td>'+(i+1)+'</td><td>'+i2p(a)+'/'+np+'</td><td>'+(np===32?i2p(a):i2p(f)+' – '+i2p(l))+'</td><td>'+(np===32?'—':i2p(b))+'</td></tr>';
+    }
+    $('sn-subbody').innerHTML=h;
+    $('sn-subinfo').textContent=fmtN(cnt)+' alt ağ, her biri '+fmtN(size)+' adres'+(cnt>64?' · ilk 64 gösteriliyor':'');
+  }
+  $('sn-form').addEventListener('submit',function(e){e.preventDefault();calc();});
+  pEl.addEventListener('change',function(){var v=ipEl.value.trim();if(v.indexOf('/')>-1)ipEl.value=v.split('/')[0].trim();else if(v.indexOf(' ')>-1)ipEl.value=v.split(' ')[0];calc();});
+  subEl.addEventListener('change',renderSub);
+  Array.prototype.forEach.call(document.querySelectorAll('#td-sn [data-v]'),function(b){b.addEventListener('click',function(){ipEl.value=b.getAttribute('data-v');calc();});});
+  $('sn-copy').addEventListener('click',function(){var t=$('sn-copy');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(last).then(function(){t.textContent='Kopyalandı';setTimeout(function(){t.textContent='Sonuçları kopyala';},1500);},function(){});}});
+  calc();
+})();
+</script>
+<p class="foot">Teknik Digital tarafından hazırlandı · MIT lisansı · Rehber, CIDR tablosu ve SSS ile tam sürüm: <a href="https://teknikdigital.com/subnet-hesaplama/" rel="noopener">teknikdigital.com/subnet-hesaplama</a></p>
+</main>
+</body>
+</html>
